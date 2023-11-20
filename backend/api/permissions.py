@@ -1,8 +1,4 @@
 from rest_framework import permissions
-from rest_framework.exceptions import AuthenticationFailed
-
-
-from rest_framework import permissions
 
 
 class AuthorOrReadOnly(permissions.BasePermission):

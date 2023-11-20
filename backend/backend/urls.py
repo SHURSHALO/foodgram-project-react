@@ -1,18 +1,9 @@
-from api.views import (
-    RecipeViewSet,
-    TagsViewSet,
-    IngredientsViewSet,
-    ShoppingViewSet,
-    UserCreateViewSet,
-    UserFollowViewSet,
-)
-
+from api.views import (IngredientsViewSet, RecipeViewSet, ShoppingViewSet,
+                       TagsViewSet, UserCreateViewSet, UserFollowViewSet)
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path, re_path
 from rest_framework import routers
 from rest_framework.authtoken import views
-
-from django.urls import re_path, include
 
 router = routers.DefaultRouter()
 

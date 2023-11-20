@@ -1,18 +1,13 @@
-from django.core.files.base import ContentFile
-from rest_framework import serializers
-from food.models import (
-    Recipe,
-    Tag,
-    Ingredient,
-    Favorite,
-    Shopping,
-    Follow,
-    RecipeIngredient,
-)
-from users.models import User
-from backend.settings import REGEX_USERNAME
-from api.validators import validate_email, validate_me, validate_username
 import base64
+
+from api.validators import validate_email, validate_me, validate_username
+from django.core.files.base import ContentFile
+from food.models import (Favorite, Follow, Ingredient, Recipe,
+                         RecipeIngredient, Shopping, Tag)
+from rest_framework import serializers
+from users.models import User
+
+from backend.settings import REGEX_USERNAME
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
