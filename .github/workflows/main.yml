@@ -99,7 +99,8 @@ jobs:
           context: ./nginx/
           push: true
           tags: shurshalo/foodgram-project-react_gateway:latest
-  
+
+
   deploy:
     runs-on: ubuntu-latest
     needs: 
