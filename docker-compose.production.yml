@@ -29,7 +29,7 @@ services:
     restart: always
 
   nginx:
-    image: shurshalo/foodgram-project-react_nginx
+    image: shurshalo/foodgram-project-react_gateway
     depends_on:
       - backend
       - db
