@@ -15,8 +15,6 @@ services:
 
   frontend:
     image: shurshalo/foodgram-project-react_frontend
-    context: ./frontend
-    dockerfile: Dockerfile
     volumes:
       - ./frontend/:/app/result_build/
 
@@ -31,7 +29,7 @@ services:
     restart: always
 
   nginx:
-    image: shurshalo/foodgram-project-react_gateway
+    image: shurshalo/foodgram-project-react_nginx
     depends_on:
       - backend
       - db
