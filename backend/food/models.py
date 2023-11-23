@@ -93,7 +93,7 @@ class Favorite(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
-        related_name='favorites',
+        related_name='favorite',
     )
     name = models.CharField(max_length=255, verbose_name='Название')
     image = models.ImageField(upload_to='food/images', verbose_name='Фото')

@@ -2,8 +2,15 @@ import base64
 
 from api.validators import validate_email, validate_me, validate_username
 from django.core.files.base import ContentFile
-from food.models import (Favorite, Follow, Ingredient, Recipe,
-                         RecipeIngredient, Shopping, Tag)
+from food.models import (
+    Favorite,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Shopping,
+    Tag,
+)
 from rest_framework import serializers
 from users.models import User
 
@@ -340,3 +347,13 @@ class UserGetSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipe.count()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        recipes_limit = self.context.get('request').query_params.get(
+            'recipes_limit'
+        )
+        if recipes_limit:
+            data['recipes'] = data['recipes'][: int(recipes_limit)]
+
+        return data

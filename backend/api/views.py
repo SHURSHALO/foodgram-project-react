@@ -1,20 +1,35 @@
+import os
 from api.filters import RecipeFilter
 from api.permissions import AuthorOrReadOnly
-from api.serializers import (CreateUserSerializer, FavoriteSerializer,
-                             FavoriteShoppingSerializer, IngredientsSerializer,
-                             RecipeDetailSerializer, RecipeSerializer,
-                             ShoppingSerializer, SubscribeSerializer,
-                             TagsSerializer, UserGetSerializer)
+from api.serializers import (
+    CreateUserSerializer,
+    FavoriteSerializer,
+    FavoriteShoppingSerializer,
+    IngredientsSerializer,
+    RecipeDetailSerializer,
+    RecipeSerializer,
+    ShoppingSerializer,
+    SubscribeSerializer,
+    TagsSerializer,
+    UserGetSerializer,
+)
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from food.models import (Favorite, Follow, Ingredient, Recipe,
-                         RecipeIngredient, Shopping, Tag)
+from food.models import (
+    Favorite,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Shopping,
+    Tag,
+)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import User
@@ -179,8 +194,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'Content-Disposition'
         ] = 'attachment; filename="shopping_cart.pdf"'
 
+        font_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            'fonts/',
+            'Verdana.ttf',
+        )
+
         p = canvas.Canvas(response)
-        pdfmetrics.registerFont(TTFont('Verdana', 'Verdana.ttf'))
+        pdfmetrics.registerFont(TTFont('Verdana', font_path))
         p.setFont("Verdana", 15)
 
         p.setFillColorRGB(0.2, 0.4, 0.6)
@@ -211,6 +232,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class IngredientsViewSet(RetrieveListViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
+    pagination_class = None
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
 
 
 class ShoppingViewSet(viewsets.ModelViewSet):
