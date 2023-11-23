@@ -14,16 +14,16 @@ services:
     restart: always
 
   frontend:
-    build:
-      context: /home/yc-user/foodgram-project-react/frontend
-      dockerfile: Dockerfile
+    image: shurshalo/foodgram-project-react_frontend
+    context: ./frontend
+    dockerfile: Dockerfile
     volumes:
-      - /home/yc-user/foodgram-project-react/frontend:/app/result_build/
+      - ./frontend/:/app/result_build/
 
   backend:
     depends_on:
       - db
-    build: /home/yc-user/foodgram-project-react/backend
+    image: shurshalo/foodgram-project-react_backend
     env_file: .env
     volumes:
       - static_volume:/backend_static
@@ -31,16 +31,16 @@ services:
     restart: always
 
   nginx:
-    build: /home/yc-user/foodgram-project-react/nginx
+    image: shurshalo/foodgram-project-react_gateway
     depends_on:
       - backend
       - db
     ports:
       - "8000:80"
     volumes:
-      - /home/yc-user/foodgram-project-react/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - /home/yc-user/foodgram-project-react/frontend/build:/usr/share/nginx/html/
-      - /home/yc-user/foodgram-project-react/docs/:/usr/share/nginx/html/api/docs/
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
       - static_volume:/static/
       - media_volume:/media/
     restart: always
