@@ -1,30 +1,35 @@
-import os
-import django
-import pandas as pd
+# import os
+# import django
+# import pandas as pd
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-django.setup()
-
-# pylint: disable=E402
-from food.models import Ingredient
-
-# pylint: enable=E402
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+# django.setup()
 
 
-def import_data(csv_path):
-    df = pd.read_csv(csv_path)
+# # В Django, вызов django.setup() используется для настройки среды выполнения Django.
+# # тот вызов должен произойти до импорта моделей Django,
+# # так как он готовит систему к работе с базой данных и другими компонентами фреймворка
 
-    for index, row in df.iterrows():
-        Ingredient.objects.create(
-            name=row['name'], measurement_unit=row['measurement_unit']
-        )
+# # pylint: disable=E402
+# from food.models import Ingredient
+
+# # pylint: enable=E402
 
 
-if __name__ == "__main__":
-    data_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'data/',
-        'ingredients.csv',
-    )
+# def import_data(csv_path):
+#     df = pd.read_csv(csv_path)
 
-    import_data(data_path)
+#     for index, row in df.iterrows():
+#         Ingredient.objects.create(
+#             name=row['name'], measurement_unit=row['measurement_unit']
+#         )
+
+
+# if __name__ == "__main__":
+#     data_path = os.path.join(
+#         os.path.dirname(os.path.abspath(__file__)),
+#         'data/',
+#         'ingredients.csv',
+#     )
+
+#     import_data(data_path)
