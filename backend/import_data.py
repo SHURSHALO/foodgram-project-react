@@ -1,14 +1,16 @@
-# import os
-# import django
-# import pandas as pd
+#import os
+#import django
+#import pandas as pd
 
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-# django.setup()
+#os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+#django.setup()
 
 
-# # В Django, вызов django.setup() используется для настройки среды выполнения Django.
-# # тот вызов должен произойти до импорта моделей Django,
-# # так как он готовит систему к работе с базой данных и другими компонентами фреймворка
+#В Django, вызов django.setup() используется для настройки 
+#среды выполнения Django.
+#тот вызов должен произойти до импорта моделей Django,
+#так как он готовит систему к работе с базой данных и 
+#другими компонентами фреймворка
 
 # # pylint: disable=E402
 # from food.models import Ingredient
