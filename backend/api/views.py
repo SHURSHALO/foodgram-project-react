@@ -4,16 +4,26 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from django.db.models import F
 from rest_framework import (
-    filters, mixins, permissions, status, viewsets,
+    filters,
+    mixins,
+    permissions,
+    status,
+    viewsets,
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import User
 
 from food.models import (
-    Favorite, Follow, Ingredient, Recipe,
-    RecipeIngredient, Shopping, Tag,
+    Favorite,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Shopping,
+    Tag,
 )
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -22,11 +32,16 @@ from reportlab.pdfgen import canvas
 from api.filters import RecipeFilter
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (
-    CreateUserSerializer, FavoriteSerializer,
-    FavoriteShoppingSerializer, IngredientsSerializer,
-    RecipeDetailSerializer, RecipeSerializer,
-    ShoppingSerializer, SubscribeSerializer,
-    TagsSerializer, UserGetSerializer,
+    CreateUserSerializer,
+    FavoriteSerializer,
+    FavoriteShoppingSerializer,
+    IngredientsSerializer,
+    RecipeDetailSerializer,
+    RecipeSerializer,
+    ShoppingSerializer,
+    SubscribeSerializer,
+    TagsSerializer,
+    UserGetSerializer,
 )
 
 
@@ -43,7 +58,9 @@ class TagsViewSet(RetrieveListViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.annotate(created_at=F('id')).order_by(
+        '-created_at'
+    )
     serializer_class = RecipeSerializer
     permission_classes = (AuthorOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
@@ -238,8 +255,6 @@ class ShoppingViewSet(viewsets.ModelViewSet):
 
 
 class UserCreateViewSet(UserViewSet):
-    """Функция обработчик всего что связано с пользователями."""
-
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
 
