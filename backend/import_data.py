@@ -5,7 +5,10 @@ import pandas as pd
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
+# pylint: disable=E402
 from food.models import Ingredient
+
+# pylint: enable=E402
 
 
 def import_data(csv_path):
