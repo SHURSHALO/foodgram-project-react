@@ -1,10 +1,12 @@
 import os
 import django
 import pandas as pd
-from food.models import Ingredient
+
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
+
+from food.models import Ingredient
 
 
 def import_data(csv_path):

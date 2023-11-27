@@ -30,7 +30,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 from api.filters import RecipeFilter
-from api.permissions import AuthorOrReadOnly
 from api.serializers import (
     CreateUserSerializer,
     FavoriteSerializer,
@@ -43,6 +42,11 @@ from api.serializers import (
     TagsSerializer,
     UserGetSerializer,
 )
+from backend.settings import SHOPPING_CART_FILE_NAME
+from django.db.models import Sum
+
+
+RESPONSE_CONTENT_TYPE = 'application/pdf'
 
 
 class RetrieveListViewSet(
@@ -61,15 +65,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.annotate(created_at=F('id')).order_by(
         '-created_at'
     )
-    serializer_class = RecipeSerializer
-    permission_classes = (AuthorOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             return (permissions.AllowAny(),)
-
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -82,14 +83,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=('post', 'delete'),
         permission_classes=[permissions.IsAuthenticated],
     )
     def favorite(self, request, pk=None):
         recipe = self.get_object()
         if not recipe:
             return Response(
-                {"error": "Recipe not found"}, status=status.HTTP_404_NOT_FOUND
+                {'error': 'Recipe not found'}, status=status.HTTP_404_NOT_FOUND
             )
         user = request.user
         favorite_instance = Favorite.objects.filter(
@@ -99,15 +100,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'POST':
             if Favorite.objects.filter(user=user, recipe=recipe).exists():
                 return Response(
-                    {"detail": "Вы уже добавили в избранное этот рецепт."},
+                    {'detail': 'Вы уже добавили в избранное этот рецепт.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             favorite_data = {
-                "recipe": recipe.id,
-                "user": user.id,
-                "name": recipe.name,
-                "image": recipe.image,
-                "cooking_time": recipe.cooking_time,
+                'user': user.id,
+                'recipe': recipe.id,
             }
             favorite_serializer = FavoriteSerializer(data=favorite_data)
             if favorite_serializer.is_valid():
@@ -126,20 +124,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             favorite_instance.delete()
             return Response(
-                {"message": "Рецепт удален из избранного."},
+                {'message': 'Рецепт удален из избранного.'},
                 status=status.HTTP_204_NO_CONTENT,
             )
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=('post', 'delete'),
         permission_classes=[permissions.IsAuthenticated],
     )
     def shopping_cart(self, request, pk=None):
         recipe = self.get_object()
         if not recipe:
             return Response(
-                {"error": "Recipe not found"}, status=status.HTTP_404_NOT_FOUND
+                {'error': 'Recipe not found'}, status=status.HTTP_404_NOT_FOUND
             )
 
         user = request.user
@@ -149,11 +147,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         if request.method == 'POST':
             shopping_data = {
-                "recipe": recipe.id,
-                "user": user.id,
-                "name": recipe.name,
-                "image": recipe.image,
-                "cooking_time": recipe.cooking_time,
+                'user': user.id,
+                'recipe': recipe.id,
             }
             shopping_serializer = ShoppingSerializer(data=shopping_data)
             if shopping_serializer.is_valid():
@@ -172,7 +167,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'DELETE':
             shopping_instance.delete()
             return Response(
-                {"message": "Рецепт удален из корзины."},
+                {'message': 'Рецепт удален из корзины.'},
                 status=status.HTTP_204_NO_CONTENT,
             )
 
@@ -184,27 +179,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         user = request.user
 
-        shopping_list = Shopping.objects.filter(user=user)
+        total_ingredients = (
+            RecipeIngredient.objects.filter(recipe__shopping__user=user)
+            .values('ingredients__name', 'ingredients__measurement_unit')
+            .annotate(total_amount=Sum('amount'))
+        )
 
-        total_ingredients = {}
-
-        for item in shopping_list:
-            for recipe_ingredient in RecipeIngredient.objects.filter(
-                recipe=item.recipe
-            ):
-                ingredient = recipe_ingredient.ingredients
-                ingredient_key = (
-                    f"{ingredient.name} ({ingredient.measurement_unit})"
-                )
-                total_ingredients[ingredient_key] = (
-                    total_ingredients.get(ingredient_key, 0)
-                    + recipe_ingredient.amount
-                )
-
-        response = HttpResponse(content_type='application/pdf')
+        response = HttpResponse(content_type=RESPONSE_CONTENT_TYPE)
         response[
             'Content-Disposition'
-        ] = 'attachment; filename="shopping_cart.pdf"'
+        ] = f"attachment; filename='{SHOPPING_CART_FILE_NAME}'"
 
         font_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
@@ -214,19 +198,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         p = canvas.Canvas(response)
         pdfmetrics.registerFont(TTFont('Verdana', font_path))
-        p.setFont("Verdana", 15)
+        p.setFont('Verdana', 15)
 
         p.setFillColorRGB(0.2, 0.4, 0.6)
         p.rect(0, 805, 600, 40, fill=True)
 
         p.setFillColorRGB(1, 1, 1)
-        p.drawString(210, 820, "Корзина покупок:")
+        p.drawString(210, 820, 'Корзина покупок:')
 
         y_position = 750
 
         p.setFillColorRGB(0, 0, 0)
-        for ingredient, amount in total_ingredients.items():
-            p.drawString(70, y_position, f"{ingredient} — {amount}")
+        for ingredient_data in total_ingredients:
+            ingredient = (
+                f"{ingredient_data['ingredients__name']} "
+                f"({ingredient_data['ingredients__measurement_unit']})"
+            )
+            amount = ingredient_data['total_amount']
+            p.drawString(70, y_position, f'{ingredient} — {amount}')
             y_position -= 15
 
         p.setFillColorRGB(0.2, 0.4, 0.6)
@@ -265,13 +254,12 @@ class UserCreateViewSet(UserViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=('post', 'delete'),
         permission_classes=[permissions.IsAuthenticated],
     )
     def subscribe(self, request, id=None):
         user = request.user
         follow_id = self.kwargs.get('id')
-        print(follow_id)
         following = get_object_or_404(User, id=follow_id)
 
         follow_instance = Follow.objects.filter(
@@ -279,14 +267,14 @@ class UserCreateViewSet(UserViewSet):
         ).first()
         if user == following:
             return Response(
-                {"detail": "Вы не можете подписаться на самого себя."},
+                {'detail': 'Вы не можете подписаться на самого себя.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if request.method == 'POST':
             if Follow.objects.filter(user=user, following=following).exists():
                 return Response(
-                    {"detail": "Вы уже подписаны на этого пользователя."},
+                    {'detail': 'Вы уже подписаны на этого пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             serializer_data = {'following': following.id}
@@ -301,12 +289,12 @@ class UserCreateViewSet(UserViewSet):
             if follow_instance:
                 follow_instance.delete()
                 return Response(
-                    {"message": "Вы отписались."},
+                    {'message': 'Вы отписались.'},
                     status=status.HTTP_204_NO_CONTENT,
                 )
             else:
                 return Response(
-                    {"error": "User is not in your followers"},
+                    {'error': 'User is not in your followers'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
