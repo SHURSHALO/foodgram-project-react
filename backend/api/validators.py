@@ -1,18 +1,9 @@
-from django.conf import settings as conf_settings
 from rest_framework import serializers
 from users.models import User
 
 
-def validate_me(data):
-    """Проверка, что нельзя поставить username = 'me'."""
-
-    if data.get('username') == conf_settings.ME:
-        raise serializers.ValidationError('Такое имя запрещено')
-    return data
-
-
 def validate_username(data):
-    """Проверка уникальности username."""
+    '''Проверка уникальности username.'''
     username = data['username']
     email = data['email']
 
@@ -24,7 +15,7 @@ def validate_username(data):
 
 
 def validate_email(data):
-    """Проверка уникальности email."""
+    '''Проверка уникальности email.'''
     username = data['username']
     email = data['email']
 

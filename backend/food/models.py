@@ -1,7 +1,12 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from users.models import User
-from backend.settings import MIN_COOKING_TIME, MAX_COOKING_TIME
+from backend.settings import (
+    MIN_COOKING_TIME,
+    MAX_COOKING_TIME,
+    MIN_INGREDIENTS_COUNT,
+    MAX_INGREDIENTS_COUNT,
+)
 
 
 class Tag(models.Model):
@@ -76,20 +81,20 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipeingredients',
+        related_name='recipies',
         verbose_name='Рецепт',
     )
     ingredients = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='recipeingredients',
+        related_name='ingredients',
         verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         validators=[
-            MinValueValidator(MIN_COOKING_TIME),
-            MaxValueValidator(MAX_COOKING_TIME),
+            MinValueValidator(MIN_INGREDIENTS_COUNT),
+            MaxValueValidator(MAX_INGREDIENTS_COUNT),
         ],
     )
 

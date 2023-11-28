@@ -6,7 +6,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from django.db.models import F
 from rest_framework import (
-    filters,
     mixins,
     permissions,
     status,
@@ -29,7 +28,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-from api.filters import RecipeFilter
+from api.filters import (
+    RecipeFilter,
+    CustomIngredientsSearchFilter,)
 from api.serializers import (
     CreateUserSerializer,
     FavoriteSerializer,
@@ -56,12 +57,18 @@ class RetrieveListViewSet(
 
 
 class TagsViewSet(RetrieveListViewSet):
+    '''Представление для тэг.'''
+
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
     pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    '''
+    Представление для рецепта, избранное, корзина,
+    PDF списка ингредиентов.
+    '''
     queryset = Recipe.objects.annotate(created_at=F('id')).order_by(
         '-created_at'
     )
@@ -84,7 +91,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=(permissions.IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
         recipe = self.get_object()
@@ -98,7 +105,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).first()
 
         if request.method == 'POST':
-            if Favorite.objects.filter(user=user, recipe=recipe).exists():
+            if favorite_instance:
                 return Response(
                     {'detail': 'Вы уже добавили в избранное этот рецепт.'},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -116,22 +123,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     ).data,
                     status=status.HTTP_201_CREATED,
                 )
-            else:
-                return Response(
-                    favorite_serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        if request.method == 'DELETE':
-            favorite_instance.delete()
             return Response(
-                {'message': 'Рецепт удален из избранного.'},
-                status=status.HTTP_204_NO_CONTENT,
+                favorite_serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if request.method == 'DELETE':
+            if favorite_instance is not None:
+                favorite_instance.delete()
+                return Response(
+                    {'message': 'Рецепт удален из избранного.'},
+                    status=status.HTTP_204_NO_CONTENT,
+                )
+            return Response(
+                {'message': 'Объект не найден.'},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=(permissions.IsAuthenticated,),
     )
     def shopping_cart(self, request, pk=None):
         recipe = self.get_object()
@@ -146,6 +157,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).first()
 
         if request.method == 'POST':
+            if shopping_instance:
+                return Response(
+                    {'detail': 'Вы уже добавили в корзину.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             shopping_data = {
                 'user': user.id,
                 'recipe': recipe.id,
@@ -165,16 +181,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         if request.method == 'DELETE':
-            shopping_instance.delete()
+            if shopping_instance is not None:
+                shopping_instance.delete()
+                return Response(
+                    {'message': 'Рецепт удален из корзины.'},
+                    status=status.HTTP_204_NO_CONTENT,
+                )
             return Response(
-                {'message': 'Рецепт удален из корзины.'},
-                status=status.HTTP_204_NO_CONTENT,
+                {'message': 'Объект не найден.'},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=(permissions.IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
         user = request.user
@@ -231,19 +252,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class IngredientsViewSet(RetrieveListViewSet):
+    '''Представление для ингредиентов.'''
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
     pagination_class = None
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (CustomIngredientsSearchFilter,)
     search_fields = ('^name',)
 
 
 class ShoppingViewSet(viewsets.ModelViewSet):
+    '''Представление для корзины.'''
+
     queryset = Shopping.objects.all()
     serializer_class = ShoppingSerializer
 
 
 class UserCreateViewSet(UserViewSet):
+    '''Представление для юзеров и подписки.'''
+
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
 
@@ -255,7 +282,7 @@ class UserCreateViewSet(UserViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=(permissions.IsAuthenticated,),
     )
     def subscribe(self, request, id=None):
         user = request.user
@@ -272,7 +299,7 @@ class UserCreateViewSet(UserViewSet):
             )
 
         if request.method == 'POST':
-            if Follow.objects.filter(user=user, following=following).exists():
+            if follow_instance:
                 return Response(
                     {'detail': 'Вы уже подписаны на этого пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -285,21 +312,22 @@ class UserCreateViewSet(UserViewSet):
             serializer.save(user=user, following=following)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             if follow_instance:
                 follow_instance.delete()
                 return Response(
                     {'message': 'Вы отписались.'},
                     status=status.HTTP_204_NO_CONTENT,
                 )
-            else:
-                return Response(
-                    {'error': 'User is not in your followers'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            return Response(
+                {'error': 'User is not in your followers'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class UserFollowViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    '''Представление для отображения списка подписок.'''
+
     serializer_class = UserGetSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
