@@ -90,7 +90,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=('post', 'delete'),
+        methods=('post', 'delete',),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
@@ -141,7 +141,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=('post', 'delete'),
+        methods=('post', 'delete',),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def shopping_cart(self, request, pk=None):
@@ -281,7 +281,7 @@ class UserCreateViewSet(UserViewSet):
 
     @action(
         detail=True,
-        methods=('post', 'delete'),
+        methods=('post', 'delete',),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def subscribe(self, request, id=None):
