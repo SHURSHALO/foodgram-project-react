@@ -14,8 +14,14 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from users.models import User
 
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+
+from backend.settings import SHOPPING_CART_FILE_NAME
+
+from users.models import User
 from food.models import (
     Favorite,
     Follow,
@@ -25,9 +31,6 @@ from food.models import (
     Shopping,
     Tag,
 )
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
 
 from api.filters import (
     RecipeFilter,
@@ -46,7 +49,6 @@ from api.serializers import (
     TagsSerializer,
     UserGetSerializer,
 )
-from backend.settings import SHOPPING_CART_FILE_NAME
 
 
 RESPONSE_CONTENT_TYPE = 'application/pdf'
