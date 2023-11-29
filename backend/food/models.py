@@ -1,5 +1,6 @@
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 
 from backend.settings import (
     MIN_COOKING_TIME,
@@ -181,6 +182,10 @@ class Follow(models.Model):
                 fields=('user', 'following'), name='unique_user_following'
             ),
         )
+
+    def clean(self):
+        if self.user == self.following:
+            raise ValidationError("Вы не можете подписаться на самого себя.")
 
     def __str__(self):
         return f'{self.user.username} - {self.following.username}'

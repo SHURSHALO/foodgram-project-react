@@ -403,8 +403,15 @@ class SubscribeSerializer(CreateUserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
+        following_user = obj.following
+
+        if user == following_user:
+            raise serializers.ValidationError(
+                "Вы не можете подписаться на самого себя."
+            )
+
         return Follow.objects.filter(
-            user=user, following=obj.following
+            user=user, following=following_user
         ).exists()
 
 
@@ -442,7 +449,17 @@ class UserGetSerializer(serializers.ModelSerializer):
         recipes_limit = self.context.get('request').query_params.get(
             'recipes_limit'
         )
+
         if recipes_limit:
-            data['recipes'] = data['recipes'][: int(recipes_limit)]
+            try:
+                recipes_limit_int = int(recipes_limit)
+                if recipes_limit_int <= 0:
+                    raise ValueError(
+                        "recipes_limit должен быть положительным числом"
+                    )
+
+                data['recipes'] = data['recipes'][:recipes_limit_int]
+            except ValueError:
+                data['error'] = 'Неверное значение для recipes_limit'
 
         return data
