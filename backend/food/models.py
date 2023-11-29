@@ -1,12 +1,13 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from users.models import User
+
 from backend.settings import (
     MIN_COOKING_TIME,
     MAX_COOKING_TIME,
-    MIN_INGREDIENTS_COUNT,
-    MAX_INGREDIENTS_COUNT,
+    MIN_AMOUNT_COUNT,
+    MAX_AMOUNT_COUNT,
 )
+from users.models import User
 
 
 class Tag(models.Model):
@@ -36,6 +37,12 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='unique_name_measurement_unit',
+            ),
+        )
 
     def __str__(self):
         return self.name[:15]
@@ -92,10 +99,10 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
-        validators=[
-            MinValueValidator(MIN_INGREDIENTS_COUNT),
-            MaxValueValidator(MAX_INGREDIENTS_COUNT),
-        ],
+        validators=(
+            MinValueValidator(MIN_AMOUNT_COUNT),
+            MaxValueValidator(MAX_AMOUNT_COUNT),
+        ),
     )
 
     class Meta:
@@ -120,6 +127,11 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'), name='unique_user_recipes'
+            ),
+        )
 
 
 class Shopping(models.Model):
@@ -139,6 +151,11 @@ class Shopping(models.Model):
     class Meta:
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'), name='unique_user_recipe'
+            ),
+        )
 
 
 class Follow(models.Model):
@@ -159,6 +176,11 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'following'), name='unique_user_following'
+            ),
+        )
 
     def __str__(self):
         return f'{self.user.username} - {self.following.username}'

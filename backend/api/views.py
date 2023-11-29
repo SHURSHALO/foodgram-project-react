@@ -30,7 +30,9 @@ from reportlab.pdfgen import canvas
 
 from api.filters import (
     RecipeFilter,
-    CustomIngredientsSearchFilter,)
+    CustomIngredientsSearchFilter,
+)
+from api.permissions import IsAuthor
 from api.serializers import (
     CreateUserSerializer,
     FavoriteSerializer,
@@ -69,6 +71,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     Представление для рецепта, избранное, корзина,
     PDF списка ингредиентов.
     '''
+
     queryset = Recipe.objects.annotate(created_at=F('id')).order_by(
         '-created_at'
     )
@@ -76,8 +79,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def get_permissions(self):
-        if self.action in ('list', 'retrieve'):
-            return (permissions.AllowAny(),)
+        if self.action == 'create':
+            return (permissions.IsAuthenticated(),)
+        elif self.action in ('update', 'destroy'):
+            return (IsAuthor(),)
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -90,7 +95,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=('post', 'delete',),
+        methods=(
+            'post',
+            'delete',
+        ),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
@@ -141,7 +149,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=('post', 'delete',),
+        methods=(
+            'post',
+            'delete',
+        ),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def shopping_cart(self, request, pk=None):
@@ -276,12 +287,15 @@ class UserCreateViewSet(UserViewSet):
 
     def get_permissions(self):
         if self.action == 'retrieve' and self.kwargs.get('id'):
-            return [permissions.AllowAny()]
+            return (permissions.AllowAny(),)
         return super().get_permissions()
 
     @action(
         detail=True,
-        methods=('post', 'delete',),
+        methods=(
+            'post',
+            'delete',
+        ),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def subscribe(self, request, id=None):

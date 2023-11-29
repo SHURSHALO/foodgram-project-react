@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from backend.settings import (
     REGEX_USERNAME,
@@ -10,6 +11,8 @@ from backend.settings import (
     MAX_COOKING_TIME,
     MIN_INGREDIENTS_COUNT,
     MAX_INGREDIENTS_COUNT,
+    MIN_AMOUNT_COUNT,
+    MAX_AMOUNT_COUNT,
 )
 from food.models import (
     Favorite,
@@ -92,6 +95,14 @@ class IngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
+
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Ingredient.objects.all(),
+                fields=('name'),
+                message='Этот ингредиент уже существует.',
+            ),
+        )
 
 
 class RecipeIngridientsSerializer(serializers.ModelSerializer):
@@ -207,6 +218,11 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, value):
         ingredient_ids = set()
         for ingredient in value:
+            if ingredient['amount'] <= 0:
+                raise ValidationError(
+                    f'Количество ингредиента должно быть '
+                    f'от {MIN_AMOUNT_COUNT} до {MAX_AMOUNT_COUNT}. '
+                )
             if ingredient['id'] in ingredient_ids:
                 raise ValidationError('Ингредиенты не должны повторяться.')
             ingredient_ids.add(ingredient['id'])
@@ -317,6 +333,14 @@ class FavoriteSerializer(serializers.ModelSerializer):
         model = Favorite
         fields = ('id', 'user', 'recipe')
 
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe'),
+                message='Вы уже добавили в избранное.',
+            ),
+        )
+
 
 class ShoppingSerializer(serializers.ModelSerializer):
     '''Сериализатор для корзины.'''
@@ -324,6 +348,14 @@ class ShoppingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shopping
         fields = ('id', 'user', 'recipe')
+
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Shopping.objects.all(),
+                fields=('user', 'recipe'),
+                message='Вы уже добавили в корзину.',
+            ),
+        )
 
 
 class RecipeSubscribeSerializer(serializers.ModelSerializer):
@@ -354,6 +386,7 @@ class SubscribeSerializer(CreateUserSerializer):
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
+        model = Follow
         fields = (
             'email',
             'id',
@@ -364,7 +397,14 @@ class SubscribeSerializer(CreateUserSerializer):
             'recipes',
             'recipes_count',
         )
-        model = Follow
+
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following'),
+                message='Вы уже подписались.',
+            ),
+        )
 
     def get_recipes_count(self, obj):
         return obj.following.recipes.count()

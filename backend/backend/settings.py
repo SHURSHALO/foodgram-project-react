@@ -120,6 +120,9 @@ MAX_COOKING_TIME = 1000
 MIN_INGREDIENTS_COUNT = 1
 MAX_INGREDIENTS_COUNT = 20
 
+MIN_AMOUNT_COUNT = 1
+MAX_AMOUNT_COUNT = 5000
+
 SHOPPING_CART_FILE_NAME = 'shopping_cart.pdf'
 
 
@@ -132,7 +135,7 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'backend.pagination.LimitPageNumberPagination',
     'PAGE_SIZE': 6,

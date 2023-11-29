@@ -35,7 +35,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'cooking_time')
     list_editable = ('cooking_time',)
     search_fields = ('name', 'author__username')
-    list_filter = ('author', 'tags', 'ingredients')
+    list_filter = ('name', 'author', 'tags')
     list_display_links = ('name', 'author')
     inlines = [RecipeIngredientInline]
 
@@ -66,3 +66,13 @@ class FollowAdmin(admin.ModelAdmin):
     list_display = ('user', 'following')
     search_fields = ('user__username', 'following__username')
     list_filter = ('user', 'following')
+
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'author', 'cooking_time', 'total_favorites')
+
+    def total_favorites(self, obj):
+        return obj.favorite_count()
+
+    total_favorites.short_description = 'Общее число добавлений в избранное'
