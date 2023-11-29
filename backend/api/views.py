@@ -288,7 +288,7 @@ class UserCreateViewSet(UserViewSet):
     def get_permissions(self):
         if self.action == 'retrieve' and self.kwargs.get('id'):
             return (permissions.AllowAny(),)
-        return (permissions.AllowAny(),)
+        return super().get_permissions()
 
     @action(
         detail=True,
