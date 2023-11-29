@@ -284,13 +284,7 @@ class UserCreateViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = CreateUserSerializer
-
-    def get_permissions(self):
-        if self.action == 'retrieve' and self.kwargs.get('id'):
-            return (permissions.AllowAny(),)
-        if self.action in ('create', 'destroy'):
-            return (permissions.IsAuthenticated(),)
-        return super().get_permissions()
+    permission_classes = (permissions.AllowAny,)
 
     @action(
         detail=True,
