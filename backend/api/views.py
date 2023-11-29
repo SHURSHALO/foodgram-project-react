@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from django.db.models import F
+from django.db.models import Sum
 from rest_framework import (
     mixins,
     permissions,
@@ -46,7 +47,6 @@ from api.serializers import (
     UserGetSerializer,
 )
 from backend.settings import SHOPPING_CART_FILE_NAME
-from django.db.models import Sum
 
 
 RESPONSE_CONTENT_TYPE = 'application/pdf'
