@@ -398,14 +398,6 @@ class SubscribeSerializer(CreateUserSerializer):
             'recipes_count',
         )
 
-        validators = (
-            UniqueTogetherValidator(
-                queryset=Follow.objects.all(),
-                fields=('user', 'following'),
-                message='Вы уже подписались.',
-            ),
-        )
-
     def get_recipes_count(self, obj):
         return obj.following.recipes.count()
 
