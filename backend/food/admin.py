@@ -51,7 +51,7 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Shopping)
 class ShoppingAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
+    list_display = ('user', 'recipe__name')
     search_fields = ('user__username', 'user__email', 'recipe__name')
     list_filter = ('recipe__tags',)
     list_display_links = ('user',)
@@ -59,7 +59,7 @@ class ShoppingAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
+    list_display = ('user', 'recipe__name')
     search_fields = ('user__username', 'user__email', 'recipe__name')
     list_filter = ('recipe__tags',)
     list_display_links = ('user',)
