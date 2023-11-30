@@ -218,7 +218,11 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, value):
         ingredient_ids = set()
         for ingredient in value:
-            if ingredient['amount'] <= 0:
+            if (
+                not MIN_AMOUNT_COUNT
+                <= ingredient['amount']
+                <= MAX_AMOUNT_COUNT
+            ):
                 raise ValidationError(
                     f'Количество ингредиента должно быть '
                     f'от {MIN_AMOUNT_COUNT} до {MAX_AMOUNT_COUNT}. '

@@ -11,6 +11,7 @@ from rest_framework import (
     permissions,
     status,
     viewsets,
+    exceptions,
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -83,8 +84,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return (permissions.IsAuthenticated(),)
-        elif self.action in ('update', 'destroy'):
+        elif self.action in ('partial_update', 'destroy'):
             return (IsAuthor(),)
+        elif self.action == 'update':
+            raise exceptions.MethodNotAllowed('PUT method is not allowed')
         return super().get_permissions()
 
     def get_serializer_class(self):
