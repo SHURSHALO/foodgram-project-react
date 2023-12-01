@@ -12,6 +12,7 @@
 ### Инструменты и стек: 
 #python #JSON #YAML #Django #React #Telegram #API #Docker #Nginx #PostgreSQL #Gunicorn #JWT #Postman
 
+
 ## Основные функции:
 
 ### Публикация рецептов:
