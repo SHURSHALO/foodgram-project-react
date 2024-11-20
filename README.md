@@ -64,4 +64,3 @@ chmod +x entrypoint.sh
 ### Адрес админки http://localhost:8000/admin/
 
 Наслаждайтесь кулинарным творчеством! 
-
